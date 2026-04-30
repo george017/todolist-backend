@@ -25,7 +25,7 @@ Incluye un middleware de seguridad que valida las peticiones mediante una **API 
 Sigue estos pasos para ejecutar el proyecto en tu entorno local:
 
 ### 1. Clonar el repositorio
-git clone https://github.com/george017/todolist-backend.git
+git clone https://github.com/george017/todolist-backend/tree/semana3
 
 ## ⚙️ Tecnologías utilizadas
 
