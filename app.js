@@ -4,13 +4,34 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
+var { connectDB } = require('./config/db');
+var initMysql = require('./config/initMsql');
+
+
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var tasksRouter=require('./routes/tasks');
 var goalsRouter = require('./routes/goals');
 
 var app = express();
+let mysqlDB = null;
 
+async function initializeDatabase() {
+    try {
+        if (process.env.DATABASE === 'MONGODB') {
+            await connectDB();
+            console.log("MongoDB conectado");
+        }
+
+        if (process.env.DATABASE === 'MYSQL') {
+            mysqlDB = await initMysql();
+            console.log("MySQL conectado y tablas verificadas");
+        }
+    } catch (error) {
+        console.error("Error inicializando base de datos:", error);
+    }
+}
+initializeDatabase();
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
@@ -22,7 +43,8 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use((req, res, next) => {
     if (req.headers.authorization && req.headers.authorization === '123456') {
-        next();
+      req.db = mysqlDB;  
+      next();
     } else {
         res.status(401).json({ error: 'Unauthorized' });
     }

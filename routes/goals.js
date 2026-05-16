@@ -1,43 +1,159 @@
 var express = require('express');
 var router = express.Router();
-
-let goals = [
-    { id_: 1, name: 'Goal 1', description: 'Description for Goal 1', duedate: '2024-07-01' },
-    { id_: 2, name: 'Goal 2', description: 'Description for Goal 2', duedate: '2024-07-02' },
-    { id_: 3, name: 'Goal 3', description: 'Description for Goal 3', duedate: '2024-07-03' }
-];
-
-// Obtener todos los objetivos
-router.get('/getGoals', (req, res) => {
-    res.status(200).appendjson(goals);
-});
-
-// Agregar un nuevo objetivo
-router.post('/addGoal', (req, res) => {
-    const { name, description, duedate } = req.body;
-    if (name && description && duedate) {
-    const newGoal = {
-        id_: Math.floor(Math.floor(Math.random() * 1000) + 1),
-        name,
-        description,
-        duedate
-    };
-    goals.push(newGoal);
-    res.status(200).json(newGoal);
-} else {
-    res.status(400).json({ error: 'Please provide all required fields' });
-}
-});
+var GoalSchema = require('../models/goal');
+const DATABASE = process.env.DATABASE;
 
 
-router.delete('/removeGoal/:id', (req, res) => {
-    if (req.params && req.params.id && !isNaN(req.params.id)) {
-        const goalId = parseInt(req.params.id);
-        goals = goals.filter(goal => goal.id_ !== goalId);
-        res.json({ message: `Goal with id ${goalId} deleted` });
-    } else {
-        res.status(400).json({ error: 'Please provide a valid goal id' });
+router.get('/getGoals', async function(req, res, next) {
+const db = req.db;
+    try {
+        if (DATABASE === 'MONGODB') {
+            let response = await GoalSchema.find({});
+            return res.status(200).json(response);
+        }
+        if (DATABASE === 'MYSQL') {
+            const [response] = await db.query(`
+                SELECT 
+                    id,
+                    name,
+                    description,
+                    duedate,
+                    created_at,
+                    updated_at
+                FROM goals
+            `);
+
+            return res.status(200).json(response);
+        }
+        return res.status(500).json({
+            error: 'Invalid DATABASE env variable'
+        });
+
+    } catch (err) {
+        res.status(500).json({
+            error: err.message || "Error fetching goals"
+        });
     }
+});
+
+router.post('/addGoal', async function(req, res, next) {
+        const db = req.db;
+    if(req.body && req.body.name && req.body.description && req.body.duedate){
+
+        try {
+
+            req.body.duedate = new Date(req.body.duedate);
+
+            // MONGODB
+            if (DATABASE === 'MONGODB') {
+
+                let goal = new GoalSchema(req.body);
+
+                let response = await goal.save();
+
+                return res.status(200).json(response);
+
+            }
+
+            // MYSQL
+            if (DATABASE === 'MYSQL') {
+
+                const [response] = await db.query(`
+                    INSERT INTO goals
+                    (
+                        name,
+                        description,
+                        duedate
+                    )
+                    VALUES (?, ?, ?)
+                `, [
+                    req.body.name,
+                    req.body.description,
+                    req.body.duedate
+                ]);
+
+                return res.status(200).json({
+                    id: response.insertId,
+                    ...req.body
+                });
+
+            }
+
+            return res.status(500).json({
+                error: 'Invalid DATABASE env variable'
+            });
+
+        } catch (err) {
+
+            res.status(500).json({
+                error: err.message || "Error saving goal"
+            });
+
+        }
+
+    } else {
+
+        res.status(400).json({
+            error: "Missing required fields: name, description, duedate"
+        });
+
+    }
+
+});
+
+router.delete('/removeGoal/:id', async function(req, res, next) {
+        const db = req.db;
+    if(req.params && req.params.id){
+
+        let id = req.params.id;
+
+        try {
+
+            // MONGODB
+            if (DATABASE === 'MONGODB') {
+
+                await GoalSchema.findByIdAndDelete(id);
+
+                return res.status(200).json({
+                    message: "Goal removed successfully"
+                });
+
+            }
+
+            // MYSQL
+            if (DATABASE === 'MYSQL') {
+
+                await db.query(`
+                    DELETE FROM goals
+                    WHERE id = ?
+                `, [id]);
+
+                return res.status(200).json({
+                    message: "Goal removed successfully"
+                });
+
+            }
+
+            return res.status(500).json({
+                error: 'Invalid DATABASE env variable'
+            });
+
+        } catch (err) {
+
+            res.status(500).json({
+                error: err.message || "Error removing goal"
+            });
+
+        }
+
+    } else {
+
+        res.status(400).json({
+            error: "Missing required fields: id"
+        });
+
+    }
+
 });
 
 module.exports = router;
