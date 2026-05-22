@@ -13,7 +13,7 @@ const goalSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    duedate: {
+    dueDate: {
       type: Date,
       required: true,
     },

@@ -17,7 +17,7 @@ const db = req.db;
                     id,
                     name,
                     description,
-                    duedate,
+                    dueDate,
                     created_at,
                     updated_at
                 FROM tasks
@@ -36,9 +36,9 @@ const db = req.db;
     }
 });
 
-router.post('/addGoal', async function(req, res, next) {
+router.post('/addTask', async function(req, res, next) {
         const db = req.db;
-    if(req.body && req.body.name && req.body.description && req.body.duedate){
+    if(req.body && req.body.name && req.body.description && req.body.dueDate){
 
         try {
 
@@ -63,13 +63,13 @@ router.post('/addGoal', async function(req, res, next) {
                     (
                         name,
                         description,
-                        duedate
+                        dueDate
                     )
                     VALUES (?, ?, ?)
                 `, [
                     req.body.name,
                     req.body.description,
-                    req.body.duedate
+                    req.body.dueDate
                 ]);
 
                 return res.status(200).json({
@@ -94,14 +94,14 @@ router.post('/addGoal', async function(req, res, next) {
     } else {
 
         res.status(400).json({
-            error: "Missing required fields: name, description, duedate"
+            error: "Missing required fields: name, description, dueDate"
         });
 
     }
 
 });
 
-router.delete('/removeGoal/:id', async function(req, res, next) {
+router.delete('/removeTask/:id', async function(req, res, next) {
         const db = req.db;
     if(req.params && req.params.id){
 

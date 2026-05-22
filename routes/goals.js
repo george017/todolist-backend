@@ -17,7 +17,7 @@ const db = req.db;
                     id,
                     name,
                     description,
-                    duedate,
+                    dueDate,
                     created_at,
                     updated_at
                 FROM goals
@@ -38,11 +38,11 @@ const db = req.db;
 
 router.post('/addGoal', async function(req, res, next) {
         const db = req.db;
-    if(req.body && req.body.name && req.body.description && req.body.duedate){
+    if(req.body && req.body.name && req.body.description && req.body.dueDate){
 
         try {
 
-            req.body.duedate = new Date(req.body.duedate);
+            req.body.dueDate = new Date(req.body.dueDate);
 
             // MONGODB
             if (DATABASE === 'MONGODB') {
@@ -63,13 +63,13 @@ router.post('/addGoal', async function(req, res, next) {
                     (
                         name,
                         description,
-                        duedate
+                        dueDate
                     )
                     VALUES (?, ?, ?)
                 `, [
                     req.body.name,
                     req.body.description,
-                    req.body.duedate
+                    req.body.dueDate
                 ]);
 
                 return res.status(200).json({
@@ -94,7 +94,7 @@ router.post('/addGoal', async function(req, res, next) {
     } else {
 
         res.status(400).json({
-            error: "Missing required fields: name, description, duedate"
+            error: "Missing required fields: name, description, dueDate"
         });
 
     }
